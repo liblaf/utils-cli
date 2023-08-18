@@ -8,6 +8,7 @@ def get_username() -> str:
     try:
         process: CompletedProcess = subprocess.run(
             args=["bw", "get", "username", BITWARDEN_ID],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             check=True,
         )
@@ -21,6 +22,7 @@ def get_password() -> str:
     try:
         process: CompletedProcess = subprocess.run(
             args=["bw", "get", "password", BITWARDEN_ID],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             check=True,
         )
