@@ -10,17 +10,9 @@ from utils.alist.credential import get_password, get_username
 
 
 def main(
-    local_path: Annotated[
-        Path,
-        typer.Argument(
-            exists=True, file_okay=True, dir_okay=False, writable=False, readable=True
-        ),
-    ],
+    local_path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     remote_prefix: Annotated[
-        Path,
-        typer.Argument(
-            exists=False, file_okay=True, dir_okay=False, writable=False, readable=False
-        ),
+        Path, typer.Argument(dir_okay=False, readable=False)
     ] = Path("/img"),
     *,
     username: Annotated[str, typer.Option("-u", "--username")] = get_username(),

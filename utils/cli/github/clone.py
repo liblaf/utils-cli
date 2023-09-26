@@ -1,8 +1,9 @@
 import json
 import subprocess
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from subprocess import CompletedProcess, Popen
+from subprocess import CompletedProcess
 from typing import Annotated
 
 import typer
@@ -25,6 +26,23 @@ def repo_list() -> Iterable[str]:
     return map(lambda repo: repo["nameWithOwner"], json.loads(process.stdout))
 
 
+def clone(repo: str, prefix: Path) -> None:
+    if (prefix / repo / ".git").is_dir():
+        return
+    subprocess.run(
+        args=[
+            "gh",
+            "repo",
+            "clone",
+            repo,
+            prefix / repo,
+            "--",
+            "--recurse-submodules",
+            "--remote-submodules",
+        ]
+    )
+
+
 def main(
     *,
     prefix: Annotated[
@@ -39,25 +57,8 @@ def main(
             readable=False,
         ),
     ] = Path.home()
-    / "Desktop"
     / "github"
 ) -> None:
-    processes: Iterable[Popen] = list(
-        map(
-            lambda repo: Popen(
-                args=[
-                    "gh",
-                    "repo",
-                    "clone",
-                    repo,
-                    prefix / repo,
-                    "--",
-                    "--recurse-submodules",
-                    "--remote-submodules",
-                ]
-            ),
-            repo_list(),
-        )
-    )
-    for process in processes:
-        process.wait()
+    with ProcessPoolExecutor() as executor:
+        repos: Sequence[str] = list(repo_list())
+        list(executor.map(clone, repos, [prefix] * len(repos)))
